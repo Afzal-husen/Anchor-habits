@@ -20,6 +20,12 @@ export function weekStart(key: string): string {
   return addDays(key, -((parse(key).getDay() + 6) % 7))
 }
 
+// Distinct days with a log in the `n` days ending today.
+export function activeDays(dates: string[], today: string, n = 7): number {
+  const from = addDays(today, -(n - 1))
+  return new Set(dates.filter((d) => d >= from && d <= today)).size
+}
+
 export function daysBetween(from: string, to: string): number {
   // Math.round absorbs the 1h DST shift.
   return Math.round((parse(to).getTime() - parse(from).getTime()) / 86_400_000)

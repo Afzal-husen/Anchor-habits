@@ -1,6 +1,13 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { addDays, dateKey, daysBetween, weekStart } from './date.ts'
+import { activeDays, addDays, dateKey, daysBetween, weekStart } from './date.ts'
+
+test('activeDays counts distinct days in the window', () => {
+  const dates = ['2026-10-12', '2026-10-12', '2026-10-06', '2026-10-05', '2026-10-13']
+  // 10-05 is 7 days back (outside), 10-13 is in the future (outside), duplicates count once
+  assert.equal(activeDays(dates, '2026-10-12'), 2)
+  assert.equal(activeDays([], '2026-10-12'), 0)
+})
 
 test('dateKey uses local time, not UTC', () => {
   assert.equal(dateKey(new Date(2026, 0, 5, 23, 59)), '2026-01-05')

@@ -4,10 +4,9 @@ import { cadenceLabel, db, MAX_ACTIVE, setActive, type Habit } from '@/db'
 import { Button } from '@/components/ui/button'
 import { HabitForm } from '@/components/HabitForm'
 
-export function HabitsScreen() {
+export function HabitsScreen({ onOpen }: { onOpen: (id: number) => void }) {
   const habits = useLiveQuery(() => db.habits.toArray(), [])
-  // undefined = closed, null = new habit, Habit = editing
-  const [editing, setEditing] = useState<Habit | null>()
+  const [creating, setCreating] = useState(false)
   const [full, setFull] = useState(false)
 
   async function toggle(h: Habit) {
@@ -20,7 +19,7 @@ export function HabitsScreen() {
 
   const row = (h: Habit) => (
     <li key={h.id} className="flex items-center gap-2 rounded-xl border p-3">
-      <button type="button" onClick={() => setEditing(h)} className="min-h-11 flex-1 text-left">
+      <button type="button" onClick={() => onOpen(h.id)} className="min-h-11 flex-1 text-left">
         <div className="font-medium">{h.name}</div>
         <div className="text-sm text-muted-foreground">{cadenceLabel(h.cadence)}</div>
       </button>
@@ -50,11 +49,11 @@ export function HabitsScreen() {
         </section>
       )}
 
-      <Button size="lg" className="h-11" onClick={() => setEditing(null)}>New habit</Button>
+      <Button size="lg" className="h-11" onClick={() => setCreating(true)}>New habit</Button>
 
-      {editing !== undefined && (
-        <HabitForm key={editing?.id ?? 'new'} habit={editing ?? undefined} open
-          onOpenChange={(o) => { if (!o) { setEditing(undefined); setFull(false) } }} />
+      {creating && (
+        <HabitForm open
+          onOpenChange={(o) => { if (!o) { setCreating(false); setFull(false) } }} />
       )}
     </div>
   )

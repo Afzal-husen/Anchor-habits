@@ -2,14 +2,16 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CheckIcon } from 'lucide-react'
 import { db, type Checkin, type Habit } from '@/db'
-import { addDays, dateKey, weekStart } from '@/lib/date'
+import { addDays, dateKey, daysBetween, weekStart } from '@/lib/date'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 
 type Logged = { checkin: Checkin; habit: Habit }
 
-export function TodayScreen({ onPickHabits }: { onPickHabits: () => void }) {
+const WELCOME_BACK_DAYS = 3
+
+export function TodayScreen({ onPickHabits, onOpen }: { onPickHabits: () => void; onOpen: (id: number) => void }) {
   const [today, setToday] = useState(dateKey)
   // An installed PWA resumes from the background without re-rendering, so re-read the date.
   useEffect(() => {
@@ -24,6 +26,8 @@ export function TodayScreen({ onPickHabits }: { onPickHabits: () => void }) {
   const data = useLiveQuery(async () => ({
     habits: await db.habits.where('active').equals(1).toArray(),
     checkins: await db.checkins.where('date').aboveOrEqual(since).toArray(),
+    lastDate: (await db.checkins.orderBy('date').last())?.date,
+    total: await db.checkins.count(),
   }), [since])
 
   const [noting, setNoting] = useState<Logged>()
@@ -61,6 +65,14 @@ export function TodayScreen({ onPickHabits }: { onPickHabits: () => void }) {
 
   return (
     <>
+      {data.lastDate && daysBetween(data.lastDate, today) >= WELCOME_BACK_DAYS && (
+        <div className="rounded-2xl bg-muted p-4">
+          <p className="font-medium">Welcome back.</p>
+          <p className="text-sm text-muted-foreground">
+            {data.total} {data.total === 1 ? 'session' : 'sessions'} so far, and every one still counts. Pick any habit below.
+          </p>
+        </div>
+      )}
       <ul className="grid gap-3">
         {data.habits.map((h) => {
           const mine = data.checkins.filter((c) => c.habitId === h.id)
@@ -72,8 +84,10 @@ export function TodayScreen({ onPickHabits }: { onPickHabits: () => void }) {
           return (
             <li key={h.id} className="grid gap-3 rounded-2xl border p-4">
               <div>
-                <div className="text-lg font-medium">{h.name}</div>
-                <div className="text-sm text-muted-foreground">{progress}</div>
+                <button type="button" onClick={() => onOpen(h.id)} className="min-h-11 text-left">
+                  <div className="text-lg font-medium">{h.name}</div>
+                  <div className="text-sm text-muted-foreground">{progress}</div>
+                </button>
               </div>
               <Button size="lg" variant={doneToday ? 'secondary' : 'default'} className="h-14 text-base"
                 onClick={() => log(h, today)}>
