@@ -30,3 +30,24 @@ db.version(1).stores({
   habits: '++id, active',
   checkins: '++id, habitId, date',
 })
+
+export function cadenceLabel(c: Cadence): string {
+  return c.type === 'weekly' ? `${c.n}× per week` : 'Flexible'
+}
+
+// New habits join the focus list when there is room.
+export function addHabit(h: Pick<Habit, 'name' | 'prompt' | 'cadence'>) {
+  return db.transaction('rw', db.habits, async () => {
+    const full = (await db.habits.where('active').equals(1).count()) >= MAX_ACTIVE
+    return db.habits.add({ ...h, active: full ? 0 : 1, createdAt: Date.now() })
+  })
+}
+
+// Returns false when the focus list is already full.
+export function setActive(id: number, active: boolean) {
+  return db.transaction('rw', db.habits, async () => {
+    if (active && (await db.habits.where('active').equals(1).count()) >= MAX_ACTIVE) return false
+    await db.habits.update(id, { active: active ? 1 : 0 })
+    return true
+  })
+}
