@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { HabitsScreen } from '@/components/HabitsScreen'
+import { TodayScreen } from '@/components/TodayScreen'
 
 // shortcut: state-based views, so the Android back button exits the app; add a router if that annoys.
 type View = 'today' | 'habits'
@@ -16,7 +17,7 @@ function App() {
           {view === 'today' ? 'Habits' : 'Today'}
         </Button>
       </header>
-      {view === 'today' ? <p className="text-muted-foreground">Today screen comes in phase 3.</p> : <HabitsScreen />}
+      {view === 'today' ? <TodayScreen onPickHabits={() => setView('habits')} /> : <HabitsScreen />}
     </main>
   )
 }
