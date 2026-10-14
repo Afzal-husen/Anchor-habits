@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ListChecksIcon, SunIcon } from 'lucide-react'
 import { HabitDetail } from '@/components/HabitDetail'
 import { HabitsScreen } from '@/components/HabitsScreen'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { TodayScreen } from '@/components/TodayScreen'
 import { cn } from '@/lib/utils'
 
@@ -26,7 +27,10 @@ function App() {
           <TodayScreen onPickHabits={() => setTab('habits')} onOpen={setHabitId} />
         ) : (
           <>
-            <h1 className="text-3xl font-semibold tracking-tight">Habits</h1>
+            <header className="flex items-center justify-between">
+              <h1 className="text-3xl font-semibold tracking-tight">Habits</h1>
+              <ThemeToggle />
+            </header>
             <HabitsScreen onOpen={setHabitId} />
           </>
         )}

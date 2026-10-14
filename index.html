@@ -6,8 +6,20 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Anchor Habits</title>
-    <meta name="theme-color" content="#fdfaf3" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0c1014" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fdfaf3" />
+    <script>
+      // Runs before first paint so the page never flashes the wrong theme.
+      // A saved choice wins; otherwise follow the system setting, live.
+      window.applyTheme = function (theme) {
+        var saved
+        try { saved = localStorage.getItem('theme') } catch (e) {}
+        theme = theme || saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        document.documentElement.dataset.theme = theme
+        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#0c1014' : '#fdfaf3'
+      }
+      applyTheme()
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () { applyTheme() })
+    </script>
   </head>
   <body>
     <div id="root"></div>
