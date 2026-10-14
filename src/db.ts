@@ -64,3 +64,12 @@ export function setActive(id: number, active: boolean) {
     return true
   })
 }
+
+// Removes the habit with all its logs and notes, all or nothing.
+export function deleteHabit(id: number) {
+  return db.transaction('rw', db.habits, db.checkins, db.notes, async () => {
+    await db.checkins.where('habitId').equals(id).delete()
+    await db.notes.where('habitId').equals(id).delete()
+    await db.habits.delete(id)
+  })
+}
