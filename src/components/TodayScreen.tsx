@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CheckIcon } from 'lucide-react'
+import { AnchorIcon, CheckIcon, ChevronRightIcon, TargetIcon } from 'lucide-react'
 import { db, type Checkin, type Habit } from '@/db'
 import { addDays, dateKey, daysBetween, weekStart } from '@/lib/date'
 import { Button } from '@/components/ui/button'
@@ -52,23 +52,42 @@ export function TodayScreen({ onPickHabits, onOpen }: { onPickHabits: () => void
     setToast(undefined)
   }
 
-  if (!data) return null
+  const header = (
+    <header>
+      <p className="text-sm font-medium text-muted-foreground">
+        {new Date(`${today}T00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+      </p>
+      <h1 className="text-3xl font-semibold tracking-tight">Today</h1>
+    </header>
+  )
+
+  if (!data) return header
 
   if (!data.habits.length) {
     return (
-      <div className="grid gap-3 rounded-2xl border p-6 text-center">
-        <p>Nothing in focus yet.</p>
-        <Button size="lg" className="h-11" onClick={onPickHabits}>Pick a habit</Button>
-      </div>
+      <>
+        {header}
+        <div className="grid justify-items-center gap-4 rounded-2xl border bg-card p-8 text-center shadow-xs">
+          <span className="grid size-14 place-items-center rounded-full bg-secondary text-secondary-foreground">
+            <AnchorIcon aria-hidden className="size-7" />
+          </span>
+          <div className="grid gap-1">
+            <p className="text-lg font-medium">Nothing in focus yet</p>
+            <p className="text-sm text-muted-foreground">Pick one small habit to start. You can add more later.</p>
+          </div>
+          <Button size="lg" className="h-12 w-full text-base" onClick={onPickHabits}>Pick a habit</Button>
+        </div>
+      </>
     )
   }
 
   return (
     <>
+      {header}
       {data.lastDate && daysBetween(data.lastDate, today) >= WELCOME_BACK_DAYS && (
-        <div className="rounded-2xl bg-muted p-4">
+        <div className="rounded-2xl bg-accent p-4 text-accent-foreground">
           <p className="font-medium">Welcome back.</p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm">
             {data.total} {data.total === 1 ? 'session' : 'sessions'} so far, and every one still counts. Pick any habit below.
           </p>
         </div>
@@ -78,18 +97,32 @@ export function TodayScreen({ onPickHabits, onOpen }: { onPickHabits: () => void
           const mine = data.checkins.filter((c) => c.habitId === h.id)
           const week = mine.filter((c) => c.date >= monday).length
           const doneToday = mine.filter((c) => c.date === today).length
-          const progress = h.cadence.type === 'weekly'
-            ? `${week} of ${h.cadence.n} this week${week >= h.cadence.n ? ' · target hit' : ''}`
-            : `${week} this week`
+          const target = h.cadence.type === 'weekly' ? h.cadence.n : undefined
           return (
-            <li key={h.id} className="grid gap-3 rounded-2xl border p-4">
-              <div>
-                <button type="button" onClick={() => onOpen(h.id)} className="min-h-11 text-left">
+            <li key={h.id} className="grid gap-3 rounded-2xl border bg-card p-4 shadow-xs">
+              <button type="button" onClick={() => onOpen(h.id)}
+                className="-m-2 flex min-h-11 cursor-pointer items-center gap-2 rounded-xl p-2 text-left transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
+                <div className="grid flex-1 gap-1.5">
                   <div className="text-lg font-medium">{h.name}</div>
-                  <div className="text-sm text-muted-foreground">{progress}</div>
-                </button>
-              </div>
-              <Button size="lg" variant={doneToday ? 'secondary' : 'default'} className="h-14 text-base"
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                    {target !== undefined && (
+                      <span aria-hidden className="flex gap-1">
+                        {Array.from({ length: target }, (_, i) => (
+                          <span key={i} className={i < week ? 'size-2.5 rounded-full bg-primary' : 'size-2.5 rounded-full bg-muted-foreground/30'} />
+                        ))}
+                      </span>
+                    )}
+                    <span>{target !== undefined ? `${week} of ${target} this week` : `${week} this week`}</span>
+                    {target !== undefined && week >= target && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+                        <TargetIcon aria-hidden className="size-3" />Target hit
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <ChevronRightIcon aria-hidden className="size-5 text-muted-foreground" />
+              </button>
+              <Button size="lg" variant={doneToday ? 'secondary' : 'default'} className="h-14 rounded-xl text-base"
                 onClick={() => log(h, today)}>
                 {doneToday ? (
                   <>
@@ -119,7 +152,7 @@ export function TodayScreen({ onPickHabits, onOpen }: { onPickHabits: () => void
 
       <div role="status" aria-live="polite">
         {toast && (
-          <div className="fixed inset-x-4 bottom-4 mx-auto flex max-w-md items-center justify-between rounded-xl bg-foreground py-1 pr-1 pl-4 text-background">
+          <div className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-20 mx-auto flex max-w-md items-center justify-between rounded-xl bg-foreground py-1 pr-1 pl-4 text-background shadow-lg motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2">
             <span>Logged {toast.habit.name}</span>
             <Button variant="ghost" className="h-11 px-4 text-background hover:bg-background/10 hover:text-background"
               onClick={() => undo(toast.checkin.id)}>

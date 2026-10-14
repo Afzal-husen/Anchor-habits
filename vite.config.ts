@@ -15,8 +15,8 @@ export default defineConfig({
         name: 'Anchor Habits',
         short_name: 'AnchorHabits',
         description: 'ADHD-friendly micro-habit tracker',
-        theme_color: '#09090b',
-        background_color: '#09090b',
+        theme_color: '#fdfaf3',
+        background_color: '#fdfaf3',
         display: 'standalone',
         icons: [
           {

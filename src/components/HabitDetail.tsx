@@ -39,20 +39,20 @@ export function HabitDetail({ id, onBack }: { id: number; onBack: () => void }) 
           <ArrowLeftIcon />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold">{habit.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{habit.name}</h1>
           <p className="text-sm text-muted-foreground">{cadenceLabel(habit.cadence)}</p>
         </div>
         <Button variant="outline" className="h-11 px-4" onClick={() => setEditing(true)}>Edit</Button>
       </header>
 
       <dl className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border p-4">
+        <div className="rounded-2xl border bg-card p-4 shadow-xs">
           <dt className="text-sm text-muted-foreground">Total sessions</dt>
-          <dd className="text-3xl font-semibold">{checkins.length}</dd>
+          <dd className="text-3xl font-semibold tabular-nums">{checkins.length}</dd>
         </div>
-        <div className="rounded-2xl border p-4">
+        <div className="rounded-2xl border bg-card p-4 shadow-xs">
           <dt className="text-sm text-muted-foreground">Last 7 days</dt>
-          <dd className="text-3xl font-semibold">
+          <dd className="text-3xl font-semibold tabular-nums">
             {activeDays(checkins.map((c) => c.date), today)}<span className="text-base font-normal text-muted-foreground"> of 7 active</span>
           </dd>
         </div>
@@ -63,7 +63,7 @@ export function HabitDetail({ id, onBack }: { id: number; onBack: () => void }) 
         {checkins.length ? (
           <ul className="grid gap-2">
             {checkins.map((c) => (
-              <li key={c.id} className="flex items-start gap-2 rounded-xl border p-3">
+              <li key={c.id} className="flex items-start gap-2 rounded-2xl border bg-card p-3 pl-4 shadow-xs">
                 <div className="flex-1 py-1">
                   <div className="text-sm font-medium">{dayLabel(c.date, today)}</div>
                   {c.note && <p className="text-sm text-muted-foreground">{c.note}</p>}
