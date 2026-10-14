@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 const time = (ms: number) => new Date(ms).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 
-// Parent remounts this with a new `key` per date, so the draft starts empty.
+// Parent remounts this with a new `key` per date, so the draft loads for that date.
 export function DaySheet({ habit, date, open, onOpenChange }: {
   habit: Habit
   date: string
@@ -21,7 +21,18 @@ export function DaySheet({ habit, date, open, onOpenChange }: {
     checkins: await db.checkins.where('habitId').equals(habit.id).filter((c) => c.date === date).sortBy('createdAt'),
     notes: await db.notes.where('habitId').equals(habit.id).filter((n) => n.date === date).sortBy('createdAt'),
   }), [habit.id, date])
-  const [draft, setDraft] = useState('')
+  // Unsaved note text survives closing the sheet or the app, per habit and day, on this device.
+  const draftKey = `draft:${habit.id}:${date}`
+  const [draft, setDraftState] = useState(() => {
+    try { return localStorage.getItem(draftKey) ?? '' } catch { return '' }
+  })
+  function setDraft(text: string) {
+    setDraftState(text)
+    try {
+      if (text) localStorage.setItem(draftKey, text)
+      else localStorage.removeItem(draftKey)
+    } catch { /* storage blocked: the draft lasts only while the sheet is open */ }
+  }
   // Delete takes two taps: the first arms the button for 3 seconds.
   const [armed, setArmed] = useState<string>()
   useEffect(() => {
