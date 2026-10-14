@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ListChecksIcon, SunIcon } from 'lucide-react'
 import { HabitDetail } from '@/components/HabitDetail'
 import { HabitsScreen } from '@/components/HabitsScreen'
+import { BackupButton } from '@/components/BackupButton'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { TodayScreen } from '@/components/TodayScreen'
 import { cn } from '@/lib/utils'
@@ -29,7 +30,10 @@ function App() {
           <>
             <header className="flex items-center justify-between">
               <h1 className="text-3xl font-semibold tracking-tight">Habits</h1>
-              <ThemeToggle />
+              <div className="flex gap-2">
+                <BackupButton />
+                <ThemeToggle />
+              </div>
             </header>
             <HabitsScreen onOpen={setHabitId} />
           </>

@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import type { Backup } from '@/lib/backup'
 
 export type Cadence = { type: 'weekly'; n: number } | { type: 'flexible' }
 
@@ -71,5 +72,26 @@ export function deleteHabit(id: number) {
     await db.checkins.where('habitId').equals(id).delete()
     await db.notes.where('habitId').equals(id).delete()
     await db.habits.delete(id)
+  })
+}
+
+export async function exportBackup(): Promise<Backup> {
+  return db.transaction('r', db.habits, db.checkins, db.notes, async () => ({
+    app: 'anchor-habits' as const,
+    version: 1 as const,
+    exportedAt: Date.now(),
+    habits: await db.habits.toArray(),
+    checkins: await db.checkins.toArray(),
+    notes: await db.notes.toArray(),
+  }))
+}
+
+// Replaces everything with the backup, all or nothing. Pass only output of parseBackup.
+export function restoreBackup(b: Backup) {
+  return db.transaction('rw', db.habits, db.checkins, db.notes, async () => {
+    await Promise.all([db.habits.clear(), db.checkins.clear(), db.notes.clear()])
+    await db.habits.bulkAdd(b.habits)
+    await db.checkins.bulkAdd(b.checkins)
+    await db.notes.bulkAdd(b.notes)
   })
 }
