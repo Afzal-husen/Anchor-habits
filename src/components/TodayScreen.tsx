@@ -26,6 +26,7 @@ export function TodayScreen({ onPickHabits, onOpen }: { onPickHabits: () => void
   const data = useLiveQuery(async () => ({
     habits: await db.habits.where('active').equals(1).toArray(),
     checkins: await db.checkins.where('date').aboveOrEqual(since).toArray(),
+    firstDate: (await db.checkins.orderBy('date').first())?.date,
     lastDate: (await db.checkins.orderBy('date').last())?.date,
     total: await db.checkins.count(),
   }), [since])
@@ -58,6 +59,12 @@ export function TodayScreen({ onPickHabits, onOpen }: { onPickHabits: () => void
         {new Date(`${today}T00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
       </p>
       <h1 className="text-3xl font-semibold tracking-tight">Today</h1>
+      {data?.firstDate && (
+        <p className="mt-1 text-sm text-muted-foreground">
+          <span className="font-medium text-foreground tabular-nums">{data.total}</span> {data.total === 1 ? 'session' : 'sessions'} logged
+          since {new Date(`${data.firstDate}T00:00`).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+        </p>
+      )}
     </header>
   )
 

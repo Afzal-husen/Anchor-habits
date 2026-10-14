@@ -2,9 +2,13 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeftIcon, Trash2Icon } from 'lucide-react'
 import { cadenceLabel, db } from '@/db'
-import { activeDays, addDays, dateKey } from '@/lib/date'
+import { activeDays, addDays, dateKey, weekCounts } from '@/lib/date'
 import { Button } from '@/components/ui/button'
 import { HabitForm } from '@/components/HabitForm'
+import { MonthCalendar } from '@/components/MonthCalendar'
+import { DaySheet } from '@/components/DaySheet'
+
+const shortDate = (key: string) => new Date(`${key}T00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
 function dayLabel(key: string, today: string): string {
   if (key === today) return 'Today'
@@ -18,8 +22,12 @@ export function HabitDetail({ id, onBack }: { id: number; onBack: () => void }) 
   const data = useLiveQuery(async () => ({
     habit: await db.habits.get(id),
     checkins: await db.checkins.where('habitId').equals(id).reverse().sortBy('date'),
+    noteDates: (await db.notes.where('habitId').equals(id).toArray()).map((n) => n.date),
   }), [id])
   const [editing, setEditing] = useState(false)
+  // Keep the picked date while closing, so the sheet can animate out with its content.
+  const [picked, setPicked] = useState<string>()
+  const [sheetOpen, setSheetOpen] = useState(false)
   // Delete takes two taps: the first arms the button for 3 seconds.
   const [armed, setArmed] = useState<number>()
   useEffect(() => {
@@ -29,8 +37,11 @@ export function HabitDetail({ id, onBack }: { id: number; onBack: () => void }) 
   }, [armed])
 
   if (!data) return null
-  const { habit, checkins } = data
+  const { habit, checkins, noteDates } = data
   if (!habit) return null
+  const weeks = weekCounts(checkins.map((c) => c.date), today)
+  const target = habit.cadence.type === 'weekly' ? habit.cadence.n : undefined
+  const scale = Math.max(target ?? 0, ...weeks.map((w) => w.count))
 
   return (
     <div className="grid gap-6">
@@ -49,6 +60,11 @@ export function HabitDetail({ id, onBack }: { id: number; onBack: () => void }) 
         <div className="rounded-2xl border bg-card p-4 shadow-xs">
           <dt className="text-sm text-muted-foreground">Total sessions</dt>
           <dd className="text-3xl font-semibold tabular-nums">{checkins.length}</dd>
+          {checkins.length > 0 && (
+            <dd className="text-sm text-muted-foreground">
+              since {shortDate(checkins[checkins.length - 1].date)} · {weeks.length} {weeks.length === 1 ? 'week' : 'weeks'}
+            </dd>
+          )}
         </div>
         <div className="rounded-2xl border bg-card p-4 shadow-xs">
           <dt className="text-sm text-muted-foreground">Last 7 days</dt>
@@ -57,6 +73,31 @@ export function HabitDetail({ id, onBack }: { id: number; onBack: () => void }) 
           </dd>
         </div>
       </dl>
+
+      <section className="grid gap-2">
+        <h2 className="text-sm font-medium text-muted-foreground">Calendar</h2>
+        <MonthCalendar dates={checkins.map((c) => c.date)} noteDates={noteDates} today={today}
+          onPick={(date) => { setPicked(date); setSheetOpen(true) }} />
+      </section>
+
+      {weeks.length > 0 && (
+        <section className="grid gap-2">
+          <h2 className="text-sm font-medium text-muted-foreground">Week by week</h2>
+          <ul className="grid gap-3 rounded-2xl border bg-card p-4 shadow-xs">
+            {weeks.map((w) => (
+              <li key={w.start} className="grid grid-cols-[5.5rem_1fr_3.5rem] items-center gap-3 text-sm">
+                <span className="text-muted-foreground">{w.start === weeks[0].start ? 'This week' : shortDate(w.start)}</span>
+                <span aria-hidden className="h-2.5 overflow-hidden rounded-full bg-muted">
+                  <span className="block h-full rounded-full bg-primary" style={{ width: `${(w.count / scale) * 100}%` }} />
+                </span>
+                <span className="text-right font-medium tabular-nums">
+                  {target !== undefined ? `${w.count}/${target}` : w.count}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="grid gap-2">
         <h2 className="text-sm font-medium text-muted-foreground">Log</h2>
@@ -86,6 +127,7 @@ export function HabitDetail({ id, onBack }: { id: number; onBack: () => void }) 
         )}
       </section>
 
+      {picked && <DaySheet key={picked} habit={habit} date={picked} open={sheetOpen} onOpenChange={setSheetOpen} />}
       {editing && <HabitForm habit={habit} open onOpenChange={setEditing} />}
     </div>
   )

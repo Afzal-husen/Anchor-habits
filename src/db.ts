@@ -19,16 +19,29 @@ export interface Checkin {
   createdAt: number
 }
 
+// A note written on a day without logging it, so typed text is never lost.
+export interface Note {
+  id: number
+  habitId: number
+  date: string
+  text: string
+  createdAt: number
+}
+
 export const MAX_ACTIVE = 3
 
 export const db = new Dexie('anchor-habits') as Dexie & {
   habits: EntityTable<Habit, 'id'>
   checkins: EntityTable<Checkin, 'id'>
+  notes: EntityTable<Note, 'id'>
 }
 
 db.version(1).stores({
   habits: '++id, active',
   checkins: '++id, habitId, date',
+})
+db.version(2).stores({
+  notes: '++id, habitId',
 })
 
 export function cadenceLabel(c: Cadence): string {
