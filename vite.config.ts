@@ -30,8 +30,8 @@ export default defineConfig({
             type: 'image/png',
           },
           {
-            // The logo sits inside the central 80% safe zone, so Android can crop it to any shape.
-            src: 'pwa-512x512.png',
+            // Full-bleed square with the logo inside the central 80% safe zone, so Android can crop it to any shape.
+            src: 'maskable-icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
