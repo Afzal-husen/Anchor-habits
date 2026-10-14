@@ -126,6 +126,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Long unbroken text (URLs, "aaaa…") wraps instead of widening flex rows past the screen. */
+    overflow-wrap: anywhere;
   }
   html {
     @apply font-sans;

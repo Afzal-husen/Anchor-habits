@@ -107,7 +107,7 @@ export function HabitDetail({ id, onBack }: { id: number; onBack: () => void }) 
               <li key={c.id} className="flex items-start gap-2 rounded-2xl border bg-card p-3 pl-4 shadow-xs">
                 <div className="flex-1 py-1">
                   <div className="text-sm font-medium">{dayLabel(c.date, today)}</div>
-                  {c.note && <p className="text-sm text-muted-foreground">{c.note}</p>}
+                  {c.note && <p className="text-sm whitespace-pre-line text-muted-foreground">{c.note}</p>}
                 </div>
                 {armed === c.id ? (
                   <Button variant="destructive" className="h-11 px-4" onClick={() => db.checkins.delete(c.id)}>

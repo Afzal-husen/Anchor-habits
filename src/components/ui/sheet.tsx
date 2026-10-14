@@ -24,13 +24,14 @@ function SheetContent({ className, children, ...props }: DialogPrimitive.Popup.P
         {...props}
       >
         <div aria-hidden className="mx-auto mt-3 h-1.5 w-10 shrink-0 rounded-full bg-muted-foreground/30" />
-        {children}
+        {/* Close comes first so opening the sheet focuses it, not the first action. */}
         <DialogPrimitive.Close
           render={<Button variant="ghost" size="icon" className="absolute top-3 right-3 size-11" />}
         >
           <XIcon />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>
+        {children}
       </DialogPrimitive.Popup>
     </DialogPrimitive.Portal>
   )
