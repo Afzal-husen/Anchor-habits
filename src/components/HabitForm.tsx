@@ -4,6 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+const CADENCES = [
+  { value: 'flexible', label: 'Flexible, no target' },
+  ...[1, 2, 3, 4, 5, 6, 7].map((n) => ({ value: String(n), label: `${n}× per week` })),
+]
 
 // Parent remounts this with a new `key` per habit, so state starts fresh.
 export function HabitForm({ habit, open, onOpenChange }: {
@@ -45,13 +51,16 @@ export function HabitForm({ habit, open, onOpenChange }: {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="habit-cadence">How often?</Label>
-            <select id="habit-cadence" value={cadence} onChange={(e) => setCadence(e.target.value)}
-              className="h-11 rounded-lg border border-input bg-transparent px-2.5 text-base md:text-sm dark:bg-input/30">
-              <option value="flexible">Flexible, no target</option>
-              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-                <option key={n} value={n}>{n}× per week</option>
-              ))}
-            </select>
+            <Select items={CADENCES} value={cadence} onValueChange={(v) => setCadence(v ?? 'flexible')}>
+              <SelectTrigger id="habit-cadence" className="h-11 w-full text-base md:text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CADENCES.map((c) => (
+                  <SelectItem key={c.value} value={c.value} className="min-h-11">{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="submit" size="lg" className="h-11 w-full">Save</Button>
